@@ -1,0 +1,44 @@
+services:
+  # Serviço Web (Django)
+  web:
+    build: .                              # Constrói do Dockerfile local
+    ports:
+      - "8000:8000"                       # Publica porta 8000 no host
+    volumes:
+      - .:/app                            # Dev: bind mount (código local)
+    env_file:
+      - .env                              # Carrega variáveis do .env
+    depends_on:
+      db:
+        condition: service_healthy        # Espera DB ficar healthy
+  healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8000/admin/"]
+        interval: 30s
+        timeout: 10s
+        retries: 3
+        start_period: 40s
+  restart: unless-stopped               # Reinicia se cair
+  environment:
+    - DEBUG=False                       # Override do .env
+  profiles:
+        - dev                               # Use: docker compose --profile dev up
+
+  # Serviço Database (Postgres)
+  db:
+    image: postgres:16-alpine             # Postgres leve
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persistência
+    env_file:
+      - .env
+    environment:
+      POSTGRES_INITDB_ARGS: "-U postgres"  # Inicializa com user postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d $POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+# Volumes nomeados (persistência de dados)
+volumes:
+  postgres_data:

@@ -7,21 +7,21 @@ services:
     volumes:
       - .:/app                            # Dev: bind mount (código local)
     env_file:
-      - .env                              # Carrega variáveis do .env
+      - dotenv_files/.env #Carrega variáveis .env, indicando onde está(pasta)
     depends_on:
       db:
         condition: service_healthy        # Espera DB ficar healthy
-  healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8000/admin/"]
-        interval: 30s
-        timeout: 10s
-        retries: 3
-        start_period: 40s
-  restart: unless-stopped               # Reinicia se cair
-  environment:
-    - DEBUG=False                       # Override do .env
-  profiles:
-        - dev                               # Use: docker compose --profile dev up
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/admin/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped               # Reinicia se cair
+    environment:
+      DEBUG: "False"                      # Override do .env
+    profiles:
+      - dev                               # Use: docker compose --profile dev up
 
   # Serviço Database (Postgres)
   db:
@@ -29,11 +29,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Persistência
     env_file:
-      - .env
+      - dotenv_files/.env
     environment:
       POSTGRES_INITDB_ARGS: "-U postgres"  # Inicializa com user postgres
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d $POSTGRES_DB"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gastosmensais"] #mesmo nome do DB_NAME
       interval: 10s
       timeout: 5s
       retries: 5
